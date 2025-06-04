@@ -18,12 +18,16 @@ export async function GET(request: Request) {
 
     const response = await axios.get(url, { auth });
     return NextResponse.json(response.data);
-  } catch (error: any) {
-    console.error('GET error:', error.response?.data || error.message);
-    return NextResponse.json(
-      { message: error.message || 'Erreur lors de la récupération' },
-      { status: error.response?.status || 500 }
-    );
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error('GET error:', error.response?.data || error.message);
+      return NextResponse.json(
+        { message: error.message || 'Erreur lors de la récupération' },
+        { status: error.response?.status || 500 }
+      );
+    }
+    console.error('GET unknown error:', error);
+    return NextResponse.json({ message: 'Erreur inconnue' }, { status: 500 });
   }
 }
 
@@ -33,12 +37,16 @@ export async function POST(request: Request) {
     const newAttributeData = await request.json();
     const response = await axios.post(`${apiBaseURL}/products/attributes`, newAttributeData, { auth });
     return NextResponse.json(response.data, { status: 201 });
-  } catch (error: any) {
-    console.error('POST error:', error.response?.data || error.message);
-    return NextResponse.json(
-      { message: error.message || 'Erreur lors de la création' },
-      { status: error.response?.status || 500 }
-    );
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error('POST error:', error.response?.data || error.message);
+      return NextResponse.json(
+        { message: error.message || 'Erreur lors de la création' },
+        { status: error.response?.status || 500 }
+      );
+    }
+    console.error('POST unknown error:', error);
+    return NextResponse.json({ message: 'Erreur inconnue' }, { status: 500 });
   }
 }
 
@@ -54,12 +62,16 @@ export async function PUT(request: Request) {
     const updatedAttributeData = await request.json();
     const response = await axios.put(`${apiBaseURL}/products/attributes/${attributeId}`, updatedAttributeData, { auth });
     return NextResponse.json(response.data);
-  } catch (error: any) {
-    console.error('PUT error:', error.response?.data || error.message);
-    return NextResponse.json(
-      { message: error.message || 'Erreur lors de la mise à jour' },
-      { status: error.response?.status || 500 }
-    );
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error('PUT error:', error.response?.data || error.message);
+      return NextResponse.json(
+        { message: error.message || 'Erreur lors de la mise à jour' },
+        { status: error.response?.status || 500 }
+      );
+    }
+    console.error('PUT unknown error:', error);
+    return NextResponse.json({ message: 'Erreur inconnue' }, { status: 500 });
   }
 }
 
@@ -74,11 +86,15 @@ export async function DELETE(request: Request) {
 
     const response = await axios.delete(`${apiBaseURL}/products/attributes/${attributeId}?force=true`, { auth });
     return NextResponse.json(response.data, { status: 200 });
-  } catch (error: any) {
-    console.error('DELETE error:', error.response?.data || error.message);
-    return NextResponse.json(
-      { message: error.message || 'Erreur lors de la suppression' },
-      { status: error.response?.status || 500 }
-    );
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error('DELETE error:', error.response?.data || error.message);
+      return NextResponse.json(
+        { message: error.message || 'Erreur lors de la suppression' },
+        { status: error.response?.status || 500 }
+      );
+    }
+    console.error('DELETE unknown error:', error);
+    return NextResponse.json({ message: 'Erreur inconnue' }, { status: 500 });
   }
 }
