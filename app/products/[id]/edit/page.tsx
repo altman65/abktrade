@@ -67,6 +67,24 @@ interface AccordionItemProps {
     setOpenAccordion: (key: string | null) => void; // Fonction pour définir l'accordéon ouvert
 }
 
+interface AcfProductFields {
+  prix_achat: string;
+  cout_logisitique: string;
+  prix_achat_total: string;
+  prix_vente_publique: string;
+  marges: boolean;
+  prix_cession_vp: string;
+  prix_site: string;
+  prix_cession_srp: string;
+  prix_cession_bradery: string;
+  prix_cession_zalando: string;
+  cas: string;
+  site_internet: boolean;
+  kchain: boolean;
+  taille_dust_bag: string;
+  visuels: string;
+}
+
 const AccordionItem: React.FC<AccordionItemProps> = ({ title, children, panelKey, openAccordion, setOpenAccordion }) => {
     const isCollapsed = openAccordion !== panelKey; // L'état est maintenant dérivé du parent
     const contentRef = useRef<HTMLDivElement>(null);
@@ -261,24 +279,26 @@ export default function EditProductPage() {
                 setProduct(productData);
 
                 // Extraction des champs ACF de meta_data
-                const extractedAcfData: { [key: string]: any } = {
-                    prix_achat: '',
-                    cout_logisitique: '',
-                    prix_achat_total: '',
-                    prix_vente_publique: '',
-                    marges: false,
-                    prix_cession_vp: '',
-                    prix_site: '',
-                    prix_cession_srp: '',
-                    prix_cession_bradery: '',
-                    prix_cession_zalando: '',
-                    cas: '',
-                    site_internet: false,
-                    kchain: false,
-                    taille_dust_bag: '', // Défaut à la valeur vide
-                    visuels: '', // Défaut à la valeur vide
-                };
-                productData.meta_data.forEach(meta => {
+ // Utilisation de l’interface :
+const extractedAcfData: AcfProductFields = {
+  prix_achat: '',
+  cout_logisitique: '',
+  prix_achat_total: '',
+  prix_vente_publique: '',
+  marges: false,
+  prix_cession_vp: '',
+  prix_site: '',
+  prix_cession_srp: '',
+  prix_cession_bradery: '',
+  prix_cession_zalando: '',
+  cas: '',
+  site_internet: false,
+  kchain: false,
+  taille_dust_bag: '',
+  visuels: '',
+};
+
+	productData.meta_data.forEach(meta => {
                     if (meta.key === 'prix_achat') {
                         extractedAcfData.prix_achat = parseFloat(meta.value) || '';
                     } else if (meta.key === 'cout_logisitique') {
