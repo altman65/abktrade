@@ -12,8 +12,19 @@ export async function GET() {
   try {
     const response = await axios.get(`${apiBaseURL}/products/categories`, { auth });
     return NextResponse.json(response.data);
-  } catch (error: any) {
-    return NextResponse.json({ message: 'Erreur lors du GET des catégories' }, { status: 500 });
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error('GET categories error:', error.response?.data || error.message);
+      return NextResponse.json(
+        { message: error.message || 'Erreur lors du GET des catégories' },
+        { status: error.response?.status || 500 }
+      );
+    }
+    console.error('GET categories unknown error:', error);
+    return NextResponse.json(
+      { message: 'Erreur inconnue lors du GET des catégories' },
+      { status: 500 }
+    );
   }
 }
 
@@ -23,7 +34,18 @@ export async function POST(request: Request) {
     const data = await request.json();
     const response = await axios.post(`${apiBaseURL}/products/categories`, data, { auth });
     return NextResponse.json(response.data, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ message: 'Erreur lors de la création' }, { status: 500 });
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error('POST category error:', error.response?.data || error.message);
+      return NextResponse.json(
+        { message: error.message || 'Erreur lors de la création' },
+        { status: error.response?.status || 500 }
+      );
+    }
+    console.error('POST category unknown error:', error);
+    return NextResponse.json(
+      { message: 'Erreur inconnue lors de la création' },
+      { status: 500 }
+    );
   }
 }
