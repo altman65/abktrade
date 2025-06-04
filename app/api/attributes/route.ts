@@ -1,85 +1,84 @@
 import { NextResponse } from 'next/server';
-import WooCommerceRestApi from '@woocommerce/woocommerce-rest-api';
+import axios from 'axios';
 
-// Initialisation de l'API WooCommerce
-// Ajout de logs pour le débogage des variables d'environnement
-console.log('DEBUG (attributes API): NEXT_PUBLIC_WORDPRESS_SITE_URL:', process.env.NEXT_PUBLIC_WORDPRESS_SITE_URL);
-console.log('DEBUG (attributes API): WOOCOMMERCE_CONSUMER_KEY (first 5 chars):', (process.env.WOOCOMMERCE_CONSUMER_KEY || '').substring(0, 5));
-console.log('DEBUG (attributes API): WOOCOMMERCE_CONSUMER_SECRET (first 5 chars):', (process.env.WOOCOMMERCE_CONSUMER_SECRET || '').substring(0, 5));
+const apiBaseURL = `${process.env.NEXT_PUBLIC_WORDPRESS_SITE_URL}/wp-json/wc/v3`;
+const auth = {
+  username: process.env.WOOCOMMERCE_CONSUMER_KEY || '',
+  password: process.env.WOOCOMMERCE_CONSUMER_SECRET || '',
+};
 
-const api = new WooCommerceRestApi({
-    url: process.env.NEXT_PUBLIC_WORDPRESS_SITE_URL || '', // Assurez-vous que cette variable est définie dans .env.local
-    consumerKey: process.env.WOOCOMMERCE_CONSUMER_KEY || '', // Assurez-vous que cette variable est définie dans .env.local
-    consumerSecret: process.env.WOOCOMMERCE_CONSUMER_SECRET || '', // Assurez-vous que cette variable est définie dans .env.local
-    version: 'wc/v3',
-    queryStringAuth: true,
-});
-
-// Fonction GET pour récupérer tous les attributs globaux ou les termes d'un attribut spécifique
+// GET: Liste des attributs ou des termes d'un attribut spécifique
 export async function GET(request: Request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const attributeId = searchParams.get('attributeId');
+  try {
+    const { searchParams } = new URL(request.url);
+    const attributeId = searchParams.get('attributeId');
+    const url = attributeId
+      ? `${apiBaseURL}/products/attributes/${attributeId}/terms`
+      : `${apiBaseURL}/products/attributes`;
 
-        let data;
-        if (attributeId) {
-            // Récupérer les termes pour un attribut spécifique
-            const response = await api.get(`products/attributes/${attributeId}/terms`);
-            data = response.data;
-        } else {
-            // Récupérer tous les attributs globaux
-            const response = await api.get('products/attributes');
-            data = response.data;
-        }
-
-        return NextResponse.json(data);
-    } catch (error: any) {
-        console.error('Error fetching attributes or terms:', error.response?.data || error.message);
-        return NextResponse.json({ message: error.message || 'Failed to fetch attributes or terms' }, { status: error.response?.status || 500 });
-    }
+    const response = await axios.get(url, { auth });
+    return NextResponse.json(response.data);
+  } catch (error: any) {
+    console.error('GET error:', error.response?.data || error.message);
+    return NextResponse.json(
+      { message: error.message || 'Erreur lors de la récupération' },
+      { status: error.response?.status || 500 }
+    );
+  }
 }
 
-// Fonction POST pour créer un nouvel attribut global (si nécessaire)
+// POST: Création d’un nouvel attribut
 export async function POST(request: Request) {
-    try {
-        const newAttributeData = await request.json();
-        const { data } = await api.post('products/attributes', newAttributeData);
-        return NextResponse.json(data, { status: 201 });
-    } catch (error: any) {
-        console.error('Error creating attribute:', error.response?.data || error.message);
-        return NextResponse.json({ message: error.message || 'Failed to create attribute' }, { status: error.response?.status || 500 });
-    }
+  try {
+    const newAttributeData = await request.json();
+    const response = await axios.post(`${apiBaseURL}/products/attributes`, newAttributeData, { auth });
+    return NextResponse.json(response.data, { status: 201 });
+  } catch (error: any) {
+    console.error('POST error:', error.response?.data || error.message);
+    return NextResponse.json(
+      { message: error.message || 'Erreur lors de la création' },
+      { status: error.response?.status || 500 }
+    );
+  }
 }
 
-// Fonction PUT pour mettre à jour un attribut global (si nécessaire)
+// PUT: Mise à jour d’un attribut
 export async function PUT(request: Request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const attributeId = searchParams.get('attributeId');
-        if (!attributeId) {
-            return NextResponse.json({ message: 'Attribute ID is required for PUT request' }, { status: 400 });
-        }
-        const updatedAttributeData = await request.json();
-        const { data } = await api.put(`products/attributes/${attributeId}`, updatedAttributeData);
-        return NextResponse.json(data);
-    } catch (error: any) {
-        console.error('Error updating attribute:', error.response?.data || error.message);
-        return NextResponse.json({ message: error.message || 'Failed to update attribute' }, { status: error.response?.status || 500 });
+  try {
+    const { searchParams } = new URL(request.url);
+    const attributeId = searchParams.get('attributeId');
+    if (!attributeId) {
+      return NextResponse.json({ message: 'ID requis' }, { status: 400 });
     }
+
+    const updatedAttributeData = await request.json();
+    const response = await axios.put(`${apiBaseURL}/products/attributes/${attributeId}`, updatedAttributeData, { auth });
+    return NextResponse.json(response.data);
+  } catch (error: any) {
+    console.error('PUT error:', error.response?.data || error.message);
+    return NextResponse.json(
+      { message: error.message || 'Erreur lors de la mise à jour' },
+      { status: error.response?.status || 500 }
+    );
+  }
 }
 
-// Fonction DELETE pour supprimer un attribut global (si nécessaire)
+// DELETE: Suppression d’un attribut
 export async function DELETE(request: Request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const attributeId = searchParams.get('attributeId');
-        if (!attributeId) {
-            return NextResponse.json({ message: 'Attribute ID is required for DELETE request' }, { status: 400 });
-        }
-        const { data } = await api.delete(`products/attributes/${attributeId}`, { force: true });
-        return NextResponse.json(data, { status: 200 });
-    } catch (error: any) {
-        console.error('Error deleting attribute:', error.response?.data || error.message);
-        return NextResponse.json({ message: error.message || 'Failed to delete attribute' }, { status: error.response?.status || 500 });
+  try {
+    const { searchParams } = new URL(request.url);
+    const attributeId = searchParams.get('attributeId');
+    if (!attributeId) {
+      return NextResponse.json({ message: 'ID requis' }, { status: 400 });
     }
+
+    const response = await axios.delete(`${apiBaseURL}/products/attributes/${attributeId}?force=true`, { auth });
+    return NextResponse.json(response.data, { status: 200 });
+  } catch (error: any) {
+    console.error('DELETE error:', error.response?.data || error.message);
+    return NextResponse.json(
+      { message: error.message || 'Erreur lors de la suppression' },
+      { status: error.response?.status || 500 }
+    );
+  }
 }
