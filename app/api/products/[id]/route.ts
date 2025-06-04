@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import WooCommerceRestApi from '@woocommerce/woocommerce-rest-api';
+import type { AxiosError } from 'axios';
 
 // DEBUG variables d'environnement
 console.log('DEBUG (products API): NEXT_PUBLIC_WORDPRESS_SITE_URL:', process.env.NEXT_PUBLIC_WORDPRESS_SITE_URL);
@@ -24,12 +25,14 @@ export async function GET(request: Request, context: { params: Params }) {
     const { id } = context.params;
     const { data } = await api.get(`products/${id}`);
     return NextResponse.json(data);
-  } catch (error: any) {
-    console.error('Error fetching product:', error.response?.data || error.message);
-    return NextResponse.json(
-      { message: error.message || 'Failed to fetch product' },
-      { status: error.response?.status || 500 }
-    );
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    const message = axiosError.message || 'Failed to fetch product';
+    const status = axiosError.response?.status || 500;
+    const details = axiosError.response?.data || null;
+
+    console.error('Error fetching product:', details || message);
+    return NextResponse.json({ message }, { status });
   }
 }
 
@@ -37,17 +40,19 @@ export async function GET(request: Request, context: { params: Params }) {
 export async function PUT(request: Request, context: { params: Params }) {
   try {
     const { id } = context.params;
-    const productData = await request.json();
-    delete (productData as any).id; // Ne pas envoyer l'id dans le corps
+    const productData: Record<string, unknown> = await request.json();
+    delete productData.id; // Ne pas envoyer l'id dans le corps
 
     const { data } = await api.put(`products/${id}`, productData);
     return NextResponse.json(data);
-  } catch (error: any) {
-    console.error('Error updating product:', error.response?.data || error.message);
-    return NextResponse.json(
-      { message: error.message || 'Failed to update product' },
-      { status: error.response?.status || 500 }
-    );
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    const message = axiosError.message || 'Failed to update product';
+    const status = axiosError.response?.status || 500;
+    const details = axiosError.response?.data || null;
+
+    console.error('Error updating product:', details || message);
+    return NextResponse.json({ message }, { status });
   }
 }
 
@@ -59,11 +64,13 @@ export async function DELETE(request: Request, context: { params: Params }) {
       force: true, // Suppression définitive
     });
     return NextResponse.json(data);
-  } catch (error: any) {
-    console.error('Error deleting product:', error.response?.data || error.message);
-    return NextResponse.json(
-      { message: error.message || 'Failed to delete product' },
-      { status: error.response?.status || 500 }
-    );
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    const message = axiosError.message || 'Failed to delete product';
+    const status = axiosError.response?.status || 500;
+    const details = axiosError.response?.data || null;
+
+    console.error('Error deleting product:', details || message);
+    return NextResponse.json({ message }, { status });
   }
 }
